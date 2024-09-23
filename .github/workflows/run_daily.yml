@@ -14,6 +14,9 @@ jobs:
       # Step 1: Checkout the repository code
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: false # Disable GitHub Actions token persistence
+          fetch-depth: 0 # Fetch all history for all branches
 
       # Step 2: Set up Python
       - name: Set up Python
@@ -33,3 +36,14 @@ jobs:
           LINE_NOTIFY_ACCESS_TOKEN: ${{ secrets.LINE_NOTIFY_ACCESS_TOKEN }}
         run: |
           python main.py
+
+      # Step 5: Commit and push updated events.json if it has changed
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add events.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update events.json"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
