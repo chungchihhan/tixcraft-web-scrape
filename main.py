@@ -6,6 +6,7 @@ import os
 # Define the JSON file to store event titles
 EVENTS_JSON_FILE = "events.json"
 LINE_NOTIFY_API_URL = "https://notify-api.line.me/api/notify"
+
 ACCESS_TOKEN = os.getenv("LINE_NOTIFY_ACCESS_TOKEN")
 
 def fetch_events():
@@ -78,7 +79,7 @@ def main():
             print(event)
 
         # Create a single message with all the new events
-        message = "<<New Events Found:>>\n" + "\n".join(new_events)
+        message = "\n".join(new_events)
 
         # Send the message to LINE Notify
         send_line_notification(message)
