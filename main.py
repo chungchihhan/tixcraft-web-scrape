@@ -5,9 +5,11 @@ import os
 
 # Define the JSON file to store event titles
 EVENTS_JSON_FILE = "events.json"
-LINE_NOTIFY_API_URL = "https://notify-api.line.me/api/notify"
+LINE_MESSAGING_API_URL = "https://api.line.me/v2/bot/message/push"
 
-ACCESS_TOKEN = os.getenv("LINE_NOTIFY_ACCESS_TOKEN")
+# Access tokens and user ID from the environment variables
+ACCESS_TOKEN = os.getenv("CHANNEL_ACCESS_TOKEN")
+USER_ID = os.getenv("LINE_USER_ID")
 
 def fetch_events():
     # Send a request to the website
@@ -46,17 +48,26 @@ def save_events_to_json(events):
     with open(EVENTS_JSON_FILE, "w") as file:
         json.dump(events, file, indent=4)
 
-def send_line_notification(message):
+def send_line_message(message):
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {ACCESS_TOKEN}"
     }
-    data = {"message": message}
-    response = requests.post(LINE_NOTIFY_API_URL, headers=headers, data=data)
+    data = {
+        "to": USER_ID,
+        "messages": [
+            {
+                "type": "text",
+                "text": message
+            }
+        ]
+    }
+    response = requests.post(LINE_MESSAGING_API_URL, headers=headers, json=data)
 
     if response.status_code == 200:
-        print("Notification sent successfully.")
+        print("Message sent successfully.")
     else:
-        print(f"Failed to send notification. Status code: {response.status_code}, Response: {response.text}")
+        print(f"Failed to send message. Status code: {response.status_code}, Response: {response.text}")
 
 def main():
     # Fetch current events from the website
@@ -72,7 +83,7 @@ def main():
     # Find new events that are not in the stored events
     new_events = [event for event in current_events if event not in stored_events]
 
-    # Send new events to LINE Notify
+    # Send new events to LINE Messaging API
     if new_events:
         print("New events found:")
         for event in new_events:
@@ -81,8 +92,8 @@ def main():
         # Create a single message with all the new events
         message = "\n".join(new_events)
 
-        # Send the message to LINE Notify
-        send_line_notification(message)
+        # Send the message to LINE Messaging API
+        send_line_message(message)
 
         # Update the stored events to include the new ones
         updated_events = stored_events + new_events
@@ -90,6 +101,7 @@ def main():
 
         print(f"Updated JSON file with {len(new_events)} new events.")
     else:
+        # send_line_message("No new events.")
         print("No new events.")
 
     # Update the stored events with current ones (in case there were changes)
